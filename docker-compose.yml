@@ -1,0 +1,53 @@
+name: nextcloud-assistant
+
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+    volumes:
+      - db:/var/lib/mysql
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  app:
+    image: nextcloud:31-apache
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+      - redis
+    environment:
+      MYSQL_HOST: db
+      MYSQL_DATABASE: nextcloud
+      MYSQL_USER: nextcloud
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      REDIS_HOST: redis
+      NEXTCLOUD_ADMIN_USER: ${NC_ADMIN_USER}
+      NEXTCLOUD_ADMIN_PASSWORD: ${NC_ADMIN_PASSWORD}
+      NEXTCLOUD_TRUSTED_DOMAINS: localhost 127.0.0.1 host.docker.internal
+      OVERWRITECLIURL: http://localhost:8080
+      PHP_UPLOAD_LIMIT: 1G
+    volumes:
+      - nextcloud:/var/www/html
+
+  cron:
+    image: nextcloud:31-apache
+    restart: unless-stopped
+    entrypoint: /cron.sh
+    depends_on:
+      - app
+    volumes:
+      - nextcloud:/var/www/html
+
+volumes:
+  db:
+  nextcloud:

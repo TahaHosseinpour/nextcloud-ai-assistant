@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+.env
+.env.local
+*.tsbuildinfo
+next-env.d.ts
+nextcloud.docker.env
+
+# Commercial font (IRANYekanX) — local only, not redistributable
+public/fonts/IRANYekan*
